@@ -94,8 +94,13 @@ public class Program
 
         builder.Services.AddHttpContextAccessor();
 
-
+        // Register Services
         builder.Services.AddScoped<IAuthService, AuthService>();
+        builder.Services.AddScoped<IRecipeService, RecipeService>();
+        builder.Services.AddScoped<ICategoryService, CategoryService>();
+        builder.Services.AddScoped<IIngredientService, IngredientService>();
+        builder.Services.AddScoped<IFoodLogService, FoodLogService>();
+        builder.Services.AddScoped<IUserService, UserService>();
 
 
         var app = builder.Build();
@@ -110,6 +115,9 @@ public class Program
 
         app.UseHttpsRedirection();
 
+        // Enable static files
+        app.UseStaticFiles();
+
         app.UseAuthentication();
         app.UseAuthorization();
 
@@ -119,4 +127,3 @@ public class Program
 
     }
 }
-

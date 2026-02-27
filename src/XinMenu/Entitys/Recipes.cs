@@ -1,4 +1,5 @@
 ﻿using Daibitx.EFCore.Extension.Converters;
+using Daibitx.Identity.Session;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System.ComponentModel.DataAnnotations;
