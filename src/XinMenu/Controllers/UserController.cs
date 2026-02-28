@@ -1,4 +1,5 @@
 using Daibitx.AspNetCore.Utils.Models;
+using Daibitx.Identity.Core.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -24,6 +25,7 @@ public class UserController : ControllerBase
     private int CurrentUserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
 
     [HttpGet("profile")]
+    [RAMAuthorize("User", "ReadProfile")]
     public async Task<OperateResult<UserProfileDto>> GetProfile()
     {
         var userId = CurrentUserId;
@@ -31,6 +33,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPut("profile")]
+    [RAMAuthorize("User", "UpdateProfile")]
     public async Task<OperateResult<UserProfileDto>> UpdateProfile([FromBody] UpdateUserProfileRequest request)
     {
         var userId = CurrentUserId;
@@ -38,6 +41,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPut("password")]
+    [RAMAuthorize("User", "ChangePassword")]
     public async Task<OperateResult<bool>> ChangePassword([FromBody] ChangePasswordRequest request)
     {
         var userId = CurrentUserId;
@@ -45,6 +49,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("avatar")]
+    [RAMAuthorize("User", "UploadAvatar")]
     public async Task<OperateResult<string>> UploadAvatar(IFormFile file)
     {
         if (file == null || file.Length == 0)

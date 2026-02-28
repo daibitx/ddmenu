@@ -1,4 +1,5 @@
 using Daibitx.AspNetCore.Utils.Models;
+using Daibitx.Identity.Core.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -24,6 +25,7 @@ public class FoodLogController : ControllerBase
     private int CurrentUserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
 
     [HttpGet]
+    [RAMAuthorize("FoodLog", "Read")]
     public async Task<OperateResult<FoodLogDayDto>> GetByDate([FromQuery] FoodLogQueryRequest request)
     {
         var userId = CurrentUserId;
@@ -31,6 +33,7 @@ public class FoodLogController : ControllerBase
     }
 
     [HttpGet("calendar")]
+    [RAMAuthorize("FoodLog", "ReadCalendar")]
     public async Task<OperateResult<FoodLogCalendarDto>> GetCalendar([FromQuery] FoodLogCalendarQueryRequest request)
     {
         var userId = CurrentUserId;
@@ -38,6 +41,7 @@ public class FoodLogController : ControllerBase
     }
 
     [HttpPost]
+    [RAMAuthorize("FoodLog", "Create")]
     public async Task<OperateResult<FoodLogItemDto>> Create([FromBody] CreateFoodLogRequest request)
     {
         var userId = CurrentUserId;
@@ -45,6 +49,7 @@ public class FoodLogController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [RAMAuthorize("FoodLog", "Update")]
     public async Task<OperateResult<FoodLogItemDto>> Update(int id, [FromBody] UpdateFoodLogRequest request)
     {
         var userId = CurrentUserId;
@@ -52,6 +57,7 @@ public class FoodLogController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [RAMAuthorize("FoodLog", "Delete")]
     public async Task<OperateResult<bool>> Delete(int id)
     {
         var userId = CurrentUserId;

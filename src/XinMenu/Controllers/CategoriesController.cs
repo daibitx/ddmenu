@@ -1,9 +1,9 @@
 using Daibitx.AspNetCore.Utils.Models;
+using Daibitx.Identity.Core.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using XinMenu.DTOs;
-using XinMenu.Models;
 using XinMenu.Services.Abstractions;
 
 namespace XinMenu.Controllers;
@@ -32,13 +32,14 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
+    [RAMAuthorize("Category", "ReadDetail")]
     public async Task<OperateResult<CategoryDto>> GetDetail(int id)
     {
         return await _categoryService.GetByIdAsync(id);
     }
 
     [HttpPost]
-    [Authorize(Roles = nameof(RoleDefinetion.Admin))]
+    [RAMAuthorize("Category", "Create")]
     public async Task<OperateResult<CategoryDto>> Create([FromBody] CreateCategoryRequest request)
     {
         var userId = CurrentUserId;
@@ -46,14 +47,14 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Roles = nameof(RoleDefinetion.Admin))]
+    [RAMAuthorize("Category", "Update")]
     public async Task<OperateResult<CategoryDto>> Update(int id, [FromBody] UpdateCategoryRequest request)
     {
         return await _categoryService.UpdateAsync(id, request);
     }
 
     [HttpDelete("{id:int}")]
-    [Authorize(Roles = nameof(RoleDefinetion.Admin))]
+    [RAMAuthorize("Category", "Delete")]
     public async Task<OperateResult<bool>> Delete(int id)
     {
         return await _categoryService.DeleteAsync(id);

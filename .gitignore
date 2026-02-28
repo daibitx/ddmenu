@@ -362,3 +362,98 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /doc
+
+# =============================================
+# Flutter/Dart 项目忽略规则
+# =============================================
+
+# Flutter 构建产物
+src/MenuApp/build/
+src/MenuApp/.dart_tool/
+src/MenuApp/.flutter-plugins
+src/MenuApp/.flutter-plugins-dependencies
+src/MenuApp/.packages
+src/MenuApp/pubspec.lock
+
+# Android 构建产物
+src/MenuApp/android/.gradle/
+src/MenuApp/android/captures/
+src/MenuApp/android/gradlew
+src/MenuApp/android/gradlew.bat
+src/MenuApp/android/local.properties
+src/MenuApp/android/**/GeneratedPluginRegistrant.java
+src/MenuApp/android/key.properties
+*.jks
+
+# iOS/XCode 构建产物
+src/MenuApp/ios/*.mode1v3
+src/MenuApp/ios/*.mode2v3
+src/MenuApp/ios/*.moved-aside
+src/MenuApp/ios/*.pbxuser
+src/MenuApp/ios/*.perspectivev3
+src/MenuApp/ios/**/*sync/
+src/MenuApp/ios/.sconsign.dblite
+src/MenuApp/ios/.tags*
+src/MenuApp/ios/**/.vagrant/
+src/MenuApp/ios/**/DerivedData/
+src/MenuApp/ios/**/Icon?
+src/MenuApp/ios/**/Pods/
+src/MenuApp/ios/**/.symlinks/
+src/MenuMenu/ios/**/profile
+src/MenuApp/ios/**/xcuserdata
+src/MenuApp/ios/.generated/
+src/MenuApp/ios/Flutter/App.framework
+src/MenuApp/ios/Flutter/Flutter.framework
+src/MenuApp/ios/Flutter/Flutter.podspec
+src/MenuApp/ios/Flutter/Generated.xcconfig
+src/MenuApp/ios/Flutter/ephemeral/
+src/MenuApp/ios/Flutter/app.flx
+src/MenuApp/ios/Flutter/app.zip
+src/MenuApp/ios/Flutter/flutter_assets/
+src/MenuApp/ios/Flutter/flutter_export_environment.sh
+src/MenuApp/ios/ServiceDefinitions.json
+src/MenuApp/ios/Runner/GeneratedPluginRegistrant.*
+
+# macOS 构建产物
+src/MenuApp/macos/Flutter/GeneratedPluginRegistrant.swift
+src/MenuApp/macos/Flutter/ephemeral/
+src/MenuApp/macos/**/xcuserdata/
+
+# Windows 构建产物
+src/MenuApp/windows/flutter/generated_plugin_registrant.cc
+src/MenuApp/windows/flutter/generated_plugin_registrant.h
+src/MenuApp/windows/flutter/generated_plugins.cmake
+
+# Linux 构建产物
+src/MenuApp/linux/flutter/generated_plugin_registrant.cc
+src/MenuApp/linux/flutter/generated_plugin_registrant.h
+src/MenuApp/linux/flutter/generated_plugins.cmake
+
+# Web 构建产物
+src/MenuApp/web/favicon.png
+
+# IDE 配置
+src/MenuApp/.idea/
+src/MenuApp/.vscode/
+src/MenuApp/*.iml
+src/MenuApp/*.ipr
+src/MenuApp/*.iws
+
+# 测试覆盖报告
+coverage/
+
+# 符号文件
+src/MenuApp/app.*.symbols
+
+# Obfuscation related
+src/MenuApp/app.*.map.json
+
+# Android Studio 构建产物
+src/MenuApp/android/app/debug
+src/MenuApp/android/app/profile
+src/MenuApp/android/app/release
+
+# iOS 编译产物
+src/MenuApp/ios/*.ipa
+src/MenuApp/ios/*.dSYM.zip
+src/MenuApp/ios/*.dSYM
