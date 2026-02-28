@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>菜谱管理系统 - 原型展示</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#f97316', // 橙色主色调
+                        secondary: '#10b981', // 绿色辅助色
+                        neutral: '#64748b',   // 中性色
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .page-container {
+                @apply w-[375px] h-[667px] border border-gray-200 rounded-2xl overflow-hidden mx-auto my-4 shadow-lg;
+            }
+            .nav-item {
+                @apply flex flex-col items-center text-xs text-gray-500;
+            }
+            .nav-item.active {
+                @apply text-primary;
+            }
+            .recipe-card {
+                @apply rounded-lg border border-gray-100 shadow-sm overflow-hidden mb-3;
+            }
+            .form-input {
+                @apply w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30;
+            }
+            .btn-primary {
+                @apply bg-primary text-white rounded-lg px-4 py-2 hover:bg-primary/90 transition-colors;
+            }
+            .btn-secondary {
+                @apply bg-white border border-gray-200 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <div class="max-w-5xl mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">菜谱管理系统 - 原型展示</h1>
+        
+        <!-- 1. 登录页面 -->
+        <div class="page-container bg-white">
+            <div class="h-full flex flex-col items-center justify-center p-6">
+                <div class="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="fa fa-cutlery text-3xl text-primary"></i>
+                </div>
+                <h2 class="text-xl font-semibold mb-8">菜谱管理系统</h2>
+                
+                <div class="w-full mb-4">
+                    <div class="relative">
+                        <i class="fa fa-user absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" placeholder="用户名" class="form-input pl-10">
+                    </div>
+                </div>
+                
+                <div class="w-full mb-6">
+                    <div class="relative">
+                        <i class="fa fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="password" placeholder="密码" class="form-input pl-10">
+                        <i class="fa fa-eye absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"></i>
+                    </div>
+                </div>
+                
+                <button class="btn-primary w-full mb-4">登录</button>
+                
+                <div class="text-red-500 text-sm hidden" id="login-error">
+                    用户名或密码错误，请重试
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 主框架 + 菜谱总览页面 -->
+        <div class="page-container bg-white">
+            <div class="h-full flex flex-col">
+                <!-- 页面内容 -->
+                <div class="flex-1 overflow-auto p-4">
+                    <!-- 菜谱总览头部 -->
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-semibold">菜谱总览</h2>
+                        <button class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center">
+                            <i class="fa fa-plus text-sm"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- 分类选择器 -->
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="px-3 py-1 bg-primary text-white rounded-full text-sm">全部</span>
+                        <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">汤</span>
+                        <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">炒菜</span>
+                        <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">凉菜</span>
+                        <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">甜品</span>
+                        <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">主食</span>
+                    </div>
+                    
+                    <!-- 菜谱卡片列表 -->
+                    <div class="recipe-card">
+                        <div class="flex">
+                            <div class="w-20 h-20 bg-gray-200">
+                                <!-- 菜谱图片占位 -->
+                            </div>
+                            <div class="flex-1 p-2">
+                                <h3 class="font-medium">红烧肉</h3>
+                                <div class="flex items-center text-xs text-gray-500 mt-1">
+                                    <span><i class="fa fa-clock-o mr-1"></i>45min</span>
+                                    <span class="mx-2">⭐⭐⭐</span>
+                                    <span><i class="fa fa-heart text-red-400"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="flex">
+                            <div class="w-20 h-20 bg-gray-200">
+                                <!-- 菜谱图片占位 -->
+                            </div>
+                            <div class="flex-1 p-2">
+                                <h3 class="font-medium">清蒸鱼</h3>
+                                <div class="flex items-center text-xs text-gray-500 mt-1">
+                                    <span><i class="fa fa-clock-o mr-1"></i>30min</span>
+                                    <span class="mx-2">⭐⭐</span>
+                                    <span><i class="fa fa-heart-o text-gray-400"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="flex">
+                            <div class="w-20 h-20 bg-gray-200">
+                                <!-- 菜谱图片占位 -->
+                            </div>
+                            <div class="flex-1 p-2">
+                                <h3 class="font-medium">番茄炒蛋</h3>
+                                <div class="flex items-center text-xs text-gray-500 mt-1">
+                                    <span><i class="fa fa-clock-o mr-1"></i>15min</span>
+                                    <span class="mx-2">⭐</span>
+                                    <span><i class="fa fa-heart-o text-gray-400"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 底部导航栏 -->
+                <div class="border-t border-gray-200 py-2 px-4">
+                    <div class="flex justify-around">
+                        <div class="nav-item active">
+                            <i class="fa fa-cutlery text-lg mb-1"></i>
+                            <span>菜谱</span>
+                        </div>
+                        <div class="nav-item">
+                            <i class="fa fa-shopping-basket text-lg mb-1"></i>
+                            <span>原料</span>
+                        </div>
+                        <div class="nav-item">
+                            <i class="fa fa-file-text-o text-lg mb-1"></i>
+                            <span>记录</span>
+                        </div>
+                        <div class="nav-item">
+                            <i class="fa fa-user text-lg mb-1"></i>
+                            <span>我的</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 菜谱详情页面 -->
+        <div class="page-container bg-white">
+            <div class="h-full flex flex-col overflow-auto">
+                <!-- 头部 -->
+                <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                    <button class="flex items-center text-gray-700">
+                        <i class="fa fa-arrow-left mr-2"></i>
+                    </button>
+                    <h2 class="text-lg font-medium">红烧肉</h2>
+                    <div class="flex gap-2">
+                        <button class="text-gray-700"><i class="fa fa-pencil"></i></button>
+                        <button class="text-gray-700"><i class="fa fa-trash"></i></button>
+                    </div>
+                </div>
+                
+                <!-- 内容 -->
+                <div class="flex-1 p-4">
+                    <!-- 菜谱图片 -->
+                    <div class="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
+                    
+                    <!-- 基本信息 -->
+                    <h1 class="text-xl font-bold mb-2">红烧肉</h1>
+                    <div class="text-gray-600 mb-4">
+                        <span class="mr-4">分类: 炒菜</span>
+                        <span class="mr-4"><i class="fa fa-clock-o mr-1"></i>45分钟</span>
+                        <span class="mr-4">⭐⭐⭐</span>
+                        <span>难度:3</span>
+                    </div>
+                    
+                    <!-- 原料清单 -->
+                    <div class="mb-4">
+                        <h3 class="font-medium mb-2"><i class="fa fa-list-ul mr-1"></i>原料清单</h3>
+                        <ul class="space-y-1">
+                            <li>• 五花肉 (原料库)</li>
+                            <li>• 生抽 (原料库)</li>
+                            <li>• 冰糖 (原料库)</li>
+                            <li>• 秘制酱料 (自定义)</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- 制作步骤 -->
+                    <div class="mb-6">
+                        <h3 class="font-medium mb-2"><i class="fa fa-file-text-o mr-1"></i>制作步骤</h3>
+                        <ol class="list-decimal pl-5 space-y-2">
+                            <li>五花肉切块焯水</li>
+                            <li>炒糖色</li>
+                            <li>下肉翻炒</li>
+                            <li>加入调料炖煮</li>
+                            <li>收汁出锅</li>
+                        </ol>
+                    </div>
+                    
+                    <!-- 操作按钮 -->
+                    <button class="btn-primary w-full">加入今日饮食</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. 菜谱编辑页面 -->
+        <div class="page-container bg-white">
+            <div class="h-full flex flex-col overflow-auto">
+                <!-- 头部 -->
+                <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                    <button class="flex items-center text-gray-700">
+                        <i class="fa fa-arrow-left mr-2"></i>
+                    </button>
+                    <h2 class="text-lg font-medium">新建菜谱</h2>
+                    <button class="btn-primary py-1 px-3 text-sm">保存</button>
+                </div>
+                
+                <!-- 内容 -->
+                <div class="flex-1 p-4 space-y-4">
+                    <!-- 图片上传 -->
+                    <div class="w-full h-40 bg-gray-100 rounded-lg flex flex-col items-center justify-center cursor-pointer">
+                        <i class="fa fa-camera text-2xl text-gray-400 mb-2"></i>
+                        <span class="text-gray-500 text-sm">点击上传图片</span>
+                    </div>
+                    
+                    <!-- 菜名 -->
+                    <div>
+                        <label class="block text-sm text-gray-700 mb-1">菜名 <span class="text-red-500">*</span></label>
+                        <input type="text" value="红烧肉" class="form-input">
+                    </div>
+                    
+                    <!-- 分类 -->
+                    <div>
+                        <label class="block text-sm text-gray-700 mb-1">分类 <span class="text-red-500">*</span></label>
+                        <select class="form-input">
+                            <option>炒菜</option>
+                            <option>汤</option>
+                            <option>凉菜</option>
+                            <option>甜品</option>
+                            <option>主食</option>
+                            <option>饮品</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 预计用时 -->
+                    <div>
+                        <label class="block text-sm text-gray-700 mb-1">预计用时(分钟)</label>
+                        <input type="number" value="45" class="form-input">
+                    </div>
+                    
+                    <!-- 难度 -->
+                    <div>
+                        <label class="block text-sm text-gray-700 mb-1">难度</label>
+                        <div class="flex text-2xl text-yellow-400">
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star-o text-gray-300"></i>
+                            <i class="fa fa-star-o text-gray-300"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- 配料清单 -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-sm text-gray-700"><i class="fa fa-list-ul mr-1"></i>配料清单</label>
+                            <button class="text-primary text-sm"><i class="fa fa-plus mr-1"></i>添加</button>
+                        </div>
+                        <input type="text" placeholder="从原料库选择或自由输入" class="form-input mb-2">
+                        <div class="space-y-1">
+                            <div class="flex items-center">
+                                <span>• 五花肉</span>
+                                <button class="ml-2 text-xs text-gray-400"><i class="fa fa-times"></i></button>
+                            </div>
+                            <div class="flex items-center">
+                                <span>• 生抽</span>
+                                <button class="ml-2 text-xs text-gray-400"><i class="fa fa-times"></i></button>
+                            </div>
+                            <div class="flex items-center">
+                                <span>• 冰糖</span>
+                                <button class="ml-2 text-xs text-gray-400"><i class="fa fa-times"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 制作步骤 -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-sm text-gray-700"><i class="fa fa-file-text-o mr-1"></i>制作步骤</label>
+                            <button class="text-primary text-sm"><i class="fa fa-plus mr-1"></i>添加</button>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex items-center">
+                                <span class="w-6 text-center">1.</span>
+                                <span class="flex-1">五花肉切块焯水</span>
+                                <button class="text-gray-400 mr-2"><i class="fa fa-pencil"></i></button>
+                                <button class="text-gray-400"><i class="fa fa-trash"></i></button>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-6 text-center">2.</span>
+                                <span class="flex-1">炒糖色</span>
+                                <button class="text-gray-400 mr-2"><i class="fa fa-pencil"></i></button>
+                                <button class="text-gray-400"><i class="fa fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 删除按钮 -->
+                    <button class="btn-secondary w-full text-red-500 border-red-200">删除菜谱</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. 原料库列表页面 -->
+        <div class="page-container bg-white">
+            <div class="h-full flex flex-col">
+                <!-- 页面内容 -->
+                <div class="flex-1 overflow-auto p-4">
+                    <!-- 头部 -->
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-semibold">原料库</h2>
+                        <button class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center">
+                            <i class="fa fa-plus text-sm"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- 搜索框 -->
+                    <div class="relative mb-4">
+                        <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" placeholder="搜索原料..." class="form-input pl-10">
+                    </div>
+                    
+                    <!-- 类型筛选 -->
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="px-3 py-1 bg-primary text-white rounded-full text-sm">全部</span>
+                        <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">调味料</span>
+                        <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">肉类</span>
+                        <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">蔬菜</span>
+                        <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">五谷</span>
+                        <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">其他</span>
+                    </div>
+                    
+                    <!-- 原料列表 -->
+                    <div class="mb-4">
+                        <h3 class="font-medium text-gray-700 mb-2"><i class="fa fa-salt mr-1"></i> 调味料 (12)</h3>
+                        <ul class="space-y-2 pl-4">
+                            <li class="text-gray-800">生抽</li>
+                            <li class="text-gray-800">老抽</li>
+                            <li class="text-gray-800">蚝油</li>
+                            <li class="text-gray-800">料酒</li>
+                            <li class="text-gray-800">盐</li>
+                            <li class="text-gray-800">糖</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h3 class="font-medium text-gray-700 mb-2"><i class="fa fa-drumstick-bite mr-1"></i> 肉类 (8)</h3>
+                        <ul class="space-y-2 pl-4">
+                            <li class="text-gray-800">五花肉</li>
+                            <li class="text-gray-800">鸡胸肉</li>
+                            <li class="text-gray-800">牛肉</li>
+                            <li class="text-gray-800">鱼肉</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-medium text-gray-700 mb-2"><i class="fa fa-leaf mr-1"></i> 蔬菜 (15)</h3>
+                        <ul class="space-y-2 pl-4">
+                            <li class="text-gray-800">西红柿</li>
+                            <li class="text-gray-800">黄瓜</li>
+                            <li class="text-gray-800">青菜</li>
+                            <li class="text-gray-800">胡萝卜</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- 底部导航栏 -->
+                <div class="border-t border-gray-200 py-2 px-4">
+                    <div class="flex justify-around">
+                        <div class="nav-item">
+                            <i class="fa fa-cutlery text-lg mb-1"></i>
+                            <span>菜谱</span>
+                        </div>
+                        <div class="nav-item active">
+                            <i class="fa fa-shopping-basket text-lg mb-1"></i>
+                            <span>原料</span>
+                        </div>
+                        <div class="nav-item">
+                            <i class="fa fa-file-text-o text-lg mb-1"></i>
+                            <span>记录</span>
+                        </div>
+                        <div class="nav-item">
+                            <i class="fa fa-user text-lg mb-1"></i>
+                            <span>我的</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. 今日饮食记录页面 -->
+        <div class="page-container bg-white">
+            <div class="h-full flex flex-col">
+                <!-- 页面内容 -->
+                <div class="flex-1 overflow-auto p-4">
+                    <!-- 头部 -->
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-semibold">今日饮食</h2>
+                        <button class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center">
+                            <i class="fa fa-plus text-sm"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- 日期 -->
+                    <div class="text-center mb-6">
+                        <div class="text-lg font-medium">2024年1月15日</div>
+                        <div class="text-gray-500 text-sm">星期一</div>
+                    </div>
+                    
+                    <!-- 饮食记录 -->
+                    <div class="space-y-4">
+                        <!-- 早餐 -->
+                        <div>
+                            <h3 class="font-medium text-gray-700 mb-2"><i class="fa fa-sun-o mr-1 text-yellow-500"></i> 早餐</h3>
+                            <ul class="space-y-1 pl-4">
+                                <li>• 08:00 豆浆</li>
+                                <li>• 08:30 油条</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- 午餐 -->
+                        <div>
+                            <h3 class="font-medium text-gray-700 mb-2"><i class="fa fa-sun-o mr-1 text-orange-500"></i> 午餐</h3>
+                            <ul class="space-y-1 pl-4">
+                                <li>• 12:00 红烧肉</li>
+                                <li>• 12:30 米饭</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- 晚餐 -->
+                        <div>
+                            <h3 class="font-medium text-gray-700 mb-2"><i class="fa fa-moon-o mr-1 text-blue-500"></i> 晚餐</h3>
+                            <ul class="space-y-1 pl-4">
+                                <li>• 18:30 清蒸鱼</li>
+                                <li>• 19:00 蔬菜沙拉</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- 加餐 -->
+                        <div>
+                            <h3 class="font-medium text-gray-700 mb-2"><i class="fa fa-birthday-cake mr-1 text-pink-500"></i> 加餐</h3>
+                            <ul class="space-y-1 pl-4">
+                                <li>• 15:30 水果</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- 查看日历按钮 -->
+                    <button class="btn-secondary w-full mt-6">查看日历</button>
+                </div>
+                
+                <!-- 底部导航栏 -->
+                <div class="border-t border-gray-200 py-2 px-4">
+                    <div class="flex justify-around">
+                        <div class="nav-item">
+                            <i class="fa fa-cutlery text-lg mb-1"></i>
+                            <span>菜谱</span>
+                        </div>
+                        <div class="nav-item">
+                            <i class="fa fa-shopping-basket text-lg mb-1"></i>
+                            <span>原料</span>
+                        </div>
+                        <div class="nav-item active">
+                            <i class="fa fa-file-text-o text-lg mb-1"></i>
+                            <span>记录</span>
+                        </div>
+                        <div class="nav-item">
+                            <i class="fa fa-user text-lg mb-1"></i>
+                            <span>我的</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. 个人中心页面 -->
+        <div class="page-container bg-white">
+            <div class="h-full flex flex-col">
+                <!-- 页面内容 -->
+                <div class="flex-1 overflow-auto p-4">
+                    <h2 class="text-lg font-semibold mb-6">我的</h2>
+                    
+                    <!-- 用户信息 -->
+                    <div class="flex flex-col items-center mb-8">
+                        <div class="w-20 h-20 bg-gray-200 rounded-full mb-3"></div>
+                        <div class="text-lg font-medium">用户名</div>
+                        <div class="text-sm text-gray-500">普通用户</div>
+                    </div>
+                    
+                    <!-- 功能列表 -->
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fa fa-star text-yellow-400 mr-3 text-lg"></i>
+                                <span>我的收藏</span>
+                            </div>
+                            <i class="fa fa-chevron-right text-gray-400"></i>
+                        </div>
+                        
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fa fa-cog text-gray-500 mr-3 text-lg"></i>
+                                <span>设置</span>
+                            </div>
+                            <i class="fa fa-chevron-right text-gray-400"></i>
+                        </div>
+                        
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fa fa-question-circle text-blue-500 mr-3 text-lg"></i>
+                                <span>帮助与反馈</span>
+                            </div>
+                            <i class="fa fa-chevron-right text-gray-400"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- 退出登录 -->
+                    <button class="btn-secondary w-full mt-8 text-red-500 border-red-200">
+                        <i class="fa fa-sign-out mr-2"></i>退出登录
+                    </button>
+                </div>
+                
+                <!-- 底部导航栏 -->
+                <div class="border-t border-gray-200 py-2 px-4">
+                    <div class="flex justify-around">
+                        <div class="nav-item">
+                            <i class="fa fa-cutlery text-lg mb-1"></i>
+                            <span>菜谱</span>
+                        </div>
+                        <div class="nav-item">
+                            <i class="fa fa-shopping-basket text-lg mb-1"></i>
+                            <span>原料</span>
+                        </div>
+                        <div class="nav-item">
+                            <i class="fa fa-file-text-o text-lg mb-1"></i>
+                            <span>记录</span>
+                        </div>
+                        <div class="nav-item active">
+                            <i class="fa fa-user text-lg mb-1"></i>
+                            <span>我的</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 简单的交互效果
+        document.addEventListener('DOMContentLoaded', function() {
+            // 密码显示/隐藏切换
+            const eyeIcon = document.querySelector('.fa-eye');
+            if (eyeIcon) {
+                eyeIcon.addEventListener('click', function() {
+                    const passwordInput = this.parentElement.querySelector('input');
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    this.classList.toggle('fa-eye');
+                    this.classList.toggle('fa-eye-slash');
+                });
+            }
+            
+            // 模拟登录失败提示
+            const loginBtn = document.querySelector('.page-container:first-child .btn-primary');
+            if (loginBtn) {
+                loginBtn.addEventListener('click', function() {
+                    const errorMsg = document.getElementById('login-error');
+                    errorMsg.classList.remove('hidden');
+                    setTimeout(() => {
+                        errorMsg.classList.add('hidden');
+                    }, 3000);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

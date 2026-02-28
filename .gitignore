@@ -361,7 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/doc
 
 # =============================================
 # Flutter/Dart 项目忽略规则
