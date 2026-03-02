@@ -760,94 +760,177 @@ class MealTypes {
 ### 3.1 API客户端封装 (services/api_client.dart)
 
 ```dart
+import 'dart:async';
+import 'dart:ui';
+import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
+import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
+
   factory ApiClient() => _instance;
-  
+
   late Dio _dio;
-  String? _token;
-  
-  // API基础地址，根据实际情况修改
-  static const String baseUrl = 'http://10.0.2.2:5000';  // Android模拟器
-  // static const String baseUrl = 'http://localhost:5000';  // iOS模拟器
-  // static const String baseUrl = 'https://your-api.com';  // 生产环境
+  late Dio _refreshDio;
+  late CookieJar cookieJar;
+  String? _accessToken;
+
+  bool _isRefreshing = false;
+  final List<Function(String)> _pendingCallbacks = [];
+
+  /// Token刷新失败回调，由AuthProvider设置
+  VoidCallback? onAuthFailed;
 
   ApiClient._internal() {
-    _dio = Dio(BaseOptions(
-      baseUrl: baseUrl,
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-    ));
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: 'http://10.0.2.2:5000',  // Android模拟器
+        // baseUrl: 'http://localhost:5000',  // iOS模拟器
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+      ),
+    );
 
-    // 添加拦截器
-    _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        // 自动添加Token
-        if (_token != null) {
-          options.headers['Authorization'] = 'Bearer $_token';
-        }
-        print('REQUEST: ${options.method} ${options.path}');
-        return handler.next(options);
-      },
-      onResponse: (response, handler) {
-        print('RESPONSE: ${response.statusCode} ${response.data}');
-        return handler.next(response);
-      },
-      onError: (error, handler) {
-        print('ERROR: ${error.response?.statusCode} ${error.message}');
-        // Token过期处理
-        if (error.response?.statusCode == 401) {
-          // 可以在这里触发重新登录或刷新Token
-        }
-        return handler.next(error);
-      },
-    ));
+    // 专门用于刷新Token的Dio实例（避免拦截器递归）
+    _refreshDio = Dio(BaseOptions(baseUrl: 'http://10.0.2.2:5000'));
+
+    // 添加拦截器处理Token和刷新逻辑
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          // 自动添加AccessToken到请求头
+          if (_accessToken != null) {
+            options.headers['Authorization'] = 'Bearer $_accessToken';
+          }
+          return handler.next(options);
+        },
+        onError: (error, handler) async {
+          // 遇到401，尝试刷新Token
+          if (error.response?.statusCode == 401) {
+            final newToken = await _handleRefresh();
+
+            if (newToken != null) {
+              // 刷新成功，重试原请求
+              error.requestOptions.headers['Authorization'] = 'Bearer $newToken';
+              final response = await _dio.fetch(error.requestOptions);
+              return handler.resolve(response);
+            } else {
+              // 刷新失败，触发回调并拒绝请求
+              onAuthFailed?.call();
+              return handler.reject(error);
+            }
+          }
+          return handler.next(error);
+        },
+      ),
+    );
   }
 
-  /// 设置Token
-  void setToken(String token) {
-    _token = token;
+  /// 处理刷新（带锁，防止并发刷新多个请求）
+  Future<String?> _handleRefresh() async {
+    // 如果正在刷新，把当前请求加入队列等待
+    if (_isRefreshing) {
+      final completer = Completer<String?>();
+      _pendingCallbacks.add((token) => completer.complete(token));
+      return completer.future;
+    }
+
+    _isRefreshing = true;
+
+    try {
+      final newToken = await _doRefresh();
+
+      // 通知所有排队的请求
+      for (var callback in _pendingCallbacks) {
+        callback(newToken ?? '');
+      }
+      _pendingCallbacks.clear();
+
+      return newToken;
+    } finally {
+      _isRefreshing = false;
+    }
   }
 
-  /// 清除Token
-  void clearToken() {
-    _token = null;
+  /// 实际执行刷新请求
+  /// RefreshToken 通过 Cookie 自动发送，不需要从 _refreshToken 变量获取
+  Future<String?> _doRefresh() async {
+    try {
+      final res = await _refreshDio.post('/api/auth/refresh');
+
+      final token = res.data['data']['token'] as String?;
+      if (token != null) {
+        _accessToken = token;
+        await _saveToken(token);
+      }
+      return token;
+    } catch (e) {
+      return null;
+    }
   }
 
-  /// 从本地存储加载Token
-  Future<void> loadToken() async {
+  /// 初始化：加载Cookie和Token
+  /// 在AuthProvider.initialize()中调用
+  Future<void> init() async {
+    final appDocDir = await getApplicationDocumentsDirectory();
+    cookieJar = PersistCookieJar(
+      storage: FileStorage("${appDocDir.path}/.cookies/"),
+    );
+
+    // 只加载 AccessToken，RefreshToken 存储在 Cookie 中
     final prefs = await SharedPreferences.getInstance();
-    _token = prefs.getString('token');
+    _accessToken = prefs.getString('AccessToken');
+
+    _dio.interceptors.add(CookieManager(cookieJar));
+    _refreshDio.interceptors.add(CookieManager(cookieJar));
   }
 
-  /// GET请求
+  /// 登录成功后设置Token
+  /// AccessToken 保存到内存和 SP，RefreshToken 由后端通过 Set-Cookie 头部自动设置
+  Future<void> setTokens(String access, String refresh) async {
+    _accessToken = access;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('AccessToken', access);
+    // RefreshToken 不存储到 SharedPreferences，由 CookieManager 管理
+  }
+
+  /// 清除Token（登出时调用）
+  Future<void> clearTokens() async {
+    _accessToken = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('AccessToken');
+    
+    // 清除 Cookie（包含 RefreshToken）
+    await cookieJar.deleteAll();
+  }
+
+  /// 保存新的AccessToken（刷新后）
+  Future<void> _saveToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('AccessToken', token);
+  }
+
+  // ============ HTTP请求方法 ============
+
   Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
     return await _dio.get(path, queryParameters: queryParameters);
   }
 
-  /// POST请求
   Future<Response> post(String path, {dynamic data}) async {
     return await _dio.post(path, data: data);
   }
 
-  /// PUT请求
   Future<Response> put(String path, {dynamic data}) async {
     return await _dio.put(path, data: data);
   }
 
-  /// DELETE请求
   Future<Response> delete(String path) async {
     return await _dio.delete(path);
   }
 
-  /// 上传文件
   Future<Response> upload(String path, String filePath, String fileName) async {
     final formData = FormData.fromMap({
       'file': await MultipartFile.fromFile(filePath, filename: fileName),
@@ -855,6 +938,17 @@ class ApiClient {
     return await _dio.post(path, data: formData);
   }
 }
+```
+
+**依赖添加**（pubspec.yaml）：
+
+```yaml
+dependencies:
+  dio: ^5.9.1
+  cookie_jar: ^4.0.8
+  dio_cookie_manager: ^3.1.1
+  path_provider: ^2.1.2
+  shared_preferences: ^2.5.4
 ```
 
 ### 3.2 认证服务 (services/auth_service.dart)
@@ -1333,38 +1427,61 @@ import '../services/auth_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
+  final ApiClient _apiClient = ApiClient();
   
   bool _isLoading = false;
   String? _error;
   User? _currentUser;
-  String? _token;
+  bool _isAuthenticated = false;
 
   // Getters
   bool get isLoading => _isLoading;
   String? get error => _error;
   User? get currentUser => _currentUser;
-  String? get token => _token;
-  bool get isAuthenticated => _token != null;
+  bool get isAuthenticated => _isAuthenticated;
   bool get isAdmin => _currentUser?.isAdmin ?? false;
 
   /// 初始化：从本地存储加载登录状态
+  /// 在 main.dart 中调用，应用启动时执行
   Future<void> initialize() async {
-    final prefs = await SharedPreferences.getInstance();
-    _token = prefs.getString('token');
-    
-    if (_token != null) {
-      ApiClient().setToken(_token!);
-      // 可以在这里调用获取用户信息的API
-      final userId = prefs.getInt('userId') ?? 0;
-      final userName = prefs.getString('userName') ?? '';
-      final role = prefs.getString('role') ?? 'user';
-      _currentUser = User(id: userId, userName: userName, role: role);
-    }
-    
+    _isLoading = true;
     notifyListeners();
+
+    try {
+      // 初始化 ApiClient（加载Cookie和Token）
+      await _apiClient.init();
+      
+      // 设置认证失败回调（Token刷新失败时触发）
+      _apiClient.onAuthFailed = () {
+        // Token刷新失败，强制登出
+        logout();
+      };
+
+      // 检查本地是否有Token，恢复登录状态
+      final prefs = await SharedPreferences.getInstance();
+      final accessToken = prefs.getString('AccessToken');
+      final userName = prefs.getString('UserName');
+      final role = prefs.getString('Role');
+      final userId = prefs.getInt('UserId');
+
+      if (accessToken != null && userName != null && role != null) {
+        _currentUser = User(
+          id: userId ?? 0,
+          userName: userName,
+          role: role,
+        );
+        _isAuthenticated = true;
+      }
+    } catch (e) {
+      _error = '初始化失败: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   /// 登录
+  /// 登录成功后，ApiClient会自动管理Token刷新
   Future<bool> login(String userName, String password) async {
     _isLoading = true;
     _error = null;
@@ -1374,21 +1491,23 @@ class AuthProvider extends ChangeNotifier {
       final response = await _authService.login(userName, password);
       
       if (response.isSuccess && response.data != null) {
-        _token = response.data!.token;
+        final loginData = response.data!;
+        
+        // 创建用户对象
         _currentUser = User(
-          id: 0,  // 可以从Token解析或后续API获取
-          userName: response.data!.userName,
-          role: response.data!.role,
+          id: 0,  // 如有需要可从后端返回或后续获取
+          userName: loginData.userName,
+          role: loginData.role,
         );
+        _isAuthenticated = true;
 
-        // 保存到本地
+        // 保存用户信息到本地（不包括Token，Token由ApiClient管理）
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', _token!);
-        await prefs.setString('userName', response.data!.userName);
-        await prefs.setString('role', response.data!.role);
-
-        // 设置API客户端Token
-        ApiClient().setToken(_token!);
+        await prefs.setString('UserName', loginData.userName);
+        await prefs.setString('Role', loginData.role);
+        
+        // 设置 AccessToken，RefreshToken 由 Cookie 自动管理
+        await _apiClient.setTokens(loginData.token, '');
 
         _isLoading = false;
         notifyListeners();
@@ -1408,21 +1527,37 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// 退出登录
+  /// 清除所有Token和用户信息
   Future<void> logout() async {
-    _token = null;
-    _currentUser = null;
-    _error = null;
+    _isLoading = true;
+    notifyListeners();
 
-    // 清除本地存储
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token');
-    await prefs.remove('userId');
-    await prefs.remove('userName');
-    await prefs.remove('role');
+    try {
+      // 清除ApiClient中的Token
+      await _apiClient.clearTokens();
+      
+      // 清除本地存储的用户信息
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('UserName');
+      await prefs.remove('Role');
+      await prefs.remove('UserId');
+      
+      // 清除状态
+      _currentUser = null;
+      _isAuthenticated = false;
+      _error = null;
+    } catch (e) {
+      _error = '登出出错: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
-    // 清除API客户端Token
-    ApiClient().clearToken();
-
+  /// 更新当前用户信息
+  /// 用于从服务器获取最新用户信息后更新
+  void updateUserInfo(User user) {
+    _currentUser = user;
     notifyListeners();
   }
 
@@ -1433,6 +1568,102 @@ class AuthProvider extends ChangeNotifier {
   }
 }
 ```
+
+### 4.1.1 配套的 main.dart 修改
+
+由于ApiClient使用Cookie管理RefreshToken，需要在main.dart中初始化：
+
+```dart
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 创建AuthProvider
+  final authProvider = AuthProvider();
+  
+  // 初始化（会同时初始化ApiClient，加载Cookie和Token）
+  await authProvider.initialize();
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
+        ChangeNotifierProvider(create: (_) => CategoryProvider()),
+        ChangeNotifierProvider(create: (_) => RecipeProvider()),
+        ChangeNotifierProvider(create: (_) => IngredientProvider()),
+        ChangeNotifierProvider(create: (_) => FoodLogProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
+}
+```
+
+### 4.1.2 配套的路由重定向逻辑
+
+在router.dart中，利用go_router的refreshListenable自动处理登录状态变化：
+
+```dart
+GoRouter createRouter(BuildContext context) {
+  return GoRouter(
+    initialLocation: AppRoutes.login,
+    
+    // 关键：监听AuthProvider变化，自动重新评估路由
+    refreshListenable: Provider.of<AuthProvider>(context, listen: false),
+    
+    redirect: (BuildContext context, GoRouterState state) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final isAuthenticated = authProvider.isAuthenticated;
+      final isLoginPage = state.matchedLocation == AppRoutes.login;
+
+      // 未登录且不在登录页，重定向到登录页
+      if (!isAuthenticated && !isLoginPage) {
+        return AppRoutes.login;
+      }
+
+      // 已登录且在登录页，重定向到首页
+      if (isAuthenticated && isLoginPage) {
+        return AppRoutes.home;
+      }
+
+      return null;
+    },
+    
+    routes: [
+      // ... 路由配置
+    ],
+  );
+}
+```
+
+### 4.1.3 使用说明
+
+**Token刷新机制说明：**
+
+1. **自动刷新**：当API返回401时，ApiClient会自动调用 `/api/auth/refresh` 刷新Token
+2. **并发控制**：多个请求同时遇到401时，只有一个请求会执行刷新，其他请求会排队等待
+3. **Cookie机制**：RefreshToken存储在HttpOnly Cookie中（由`dio_cookie_manager`自动管理），更加安全，不需要手动存储到SharedPreferences
+4. **失败处理**：如果刷新失败（如RefreshToken过期），会触发 `onAuthFailed` 回调，自动登出
+
+**重要说明：**
+- AccessToken 存储在内存和 SharedPreferences（用于应用重启后恢复）
+- RefreshToken 只存储在 Cookie 中，由 CookieManager 自动管理
+- 登录时后端应通过 `Set-Cookie` 头部设置 RefreshToken
+- 刷新时 `_refreshDio` 会自动带上 Cookie，不需要手动传递 RefreshToken
+
+**AuthProvider职责：**
+
+- 管理用户登录状态 (`isAuthenticated`)
+- 管理用户信息 (`currentUser`)
+- 处理登录/登出流程
+- 协调ApiClient的Token管理
+
+**注意事项：**
+
+- 不要在AuthProvider中直接存储Token，由ApiClient统一管理
+- RefreshToken 由 CookieManager 自动管理，不需要存储到 SharedPreferences
+- 如需获取当前AccessToken（如用于WebSocket连接），可在ApiClient中添加getter方法
+- 当Token刷新失败时，AuthProvider会自动登出并跳转到登录页
+- 后端登录接口应设置 `Set-Cookie: refreshToken=xxx; HttpOnly` 头部
 
 ### 4.2 菜谱状态管理 (providers/recipe_provider.dart)
 

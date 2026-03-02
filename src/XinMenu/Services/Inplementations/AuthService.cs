@@ -71,6 +71,7 @@ public class AuthService : IAuthService
         });
         return OperateResult<LoginResponse>.Succeed(new LoginResponse
         {
+            Id = user.Id,
             Token = token,
             UserName = user.UserName,
             Role = roles.FirstOrDefault()?.Description ?? "",
@@ -127,7 +128,7 @@ public class AuthService : IAuthService
         {
             HttpOnly = true,
             Secure = true,
-            SameSite = SameSiteMode.Strict,
+            SameSite = SameSiteMode.None,
             Path = "/api/auth/refresh",
             Expires = DateTimeOffset.Now.AddDays(7)
         });

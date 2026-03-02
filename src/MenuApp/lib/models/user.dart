@@ -1,7 +1,7 @@
 class User {
   final int id;
   final String userName;
-  final String role;  // 'admin' | 'user'
+  final String role; // 'admin' | 'user'
   final String? avatarUrl;
 
   User({
@@ -29,12 +29,15 @@ class User {
 
   bool get isAdmin => role == 'admin';
 }
+
 class LoginResponse {
+  final int id;
   final String token;
   final String userName;
   final String role;
 
   LoginResponse({
+    required this.id,
     required this.token,
     required this.userName,
     required this.role,
@@ -42,12 +45,14 @@ class LoginResponse {
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
     return LoginResponse(
+      id: json['id'] ?? 0,
       token: json['token'] ?? '',
       userName: json['userName'] ?? '',
       role: json['role'] ?? 'user',
     );
   }
 }
+
 class UserProfile {
   final int id;
   final String userName;

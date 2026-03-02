@@ -13,7 +13,7 @@ class FoodLogService {
       );
       return ApiResponse.fromJson(
         response.data,
-            (json) => FoodLogDay.fromJson(json),
+        (json) => FoodLogDay.fromJson(json),
       );
     } catch (e) {
       return ApiResponse(code: 500, message: e.toString(), success: false);
@@ -28,31 +28,42 @@ class FoodLogService {
       );
       return ApiResponse.fromJson(
         response.data,
-            (json) => FoodLogCalendar.fromJson(json),
+        (json) => FoodLogCalendar.fromJson(json),
       );
     } catch (e) {
       return ApiResponse(code: 500, message: e.toString(), success: false);
     }
   }
 
-  Future<ApiResponse<FoodLogItem>> createFoodLog(CreateFoodLogRequest request) async {
+  Future<ApiResponse<FoodLogItem>> createFoodLog(
+    CreateFoodLogRequest request,
+  ) async {
     try {
-      final response = await _client.post('/api/foodlog', data: request.toJson());
+      final response = await _client.post(
+        '/api/foodlog',
+        data: request.toJson(),
+      );
       return ApiResponse.fromJson(
         response.data,
-            (json) => FoodLogItem.fromJson(json),
+        (json) => FoodLogItem.fromJson(json),
       );
     } catch (e) {
       return ApiResponse(code: 500, message: e.toString(), success: false);
     }
   }
 
-  Future<ApiResponse<FoodLogItem>> updateFoodLog(int id, CreateFoodLogRequest request) async {
+  Future<ApiResponse<FoodLogItem>> updateFoodLog(
+    int id,
+    CreateFoodLogRequest request,
+  ) async {
     try {
-      final response = await _client.put('/api/foodlog/$id', data: request.toJson());
+      final response = await _client.put(
+        '/api/foodlog/$id',
+        data: request.toJson(),
+      );
       return ApiResponse.fromJson(
         response.data,
-            (json) => FoodLogItem.fromJson(json),
+        (json) => FoodLogItem.fromJson(json),
       );
     } catch (e) {
       return ApiResponse(code: 500, message: e.toString(), success: false);
